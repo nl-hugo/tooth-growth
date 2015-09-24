@@ -2,6 +2,7 @@
 title: "The Effect of Vitamin C on Tooth Growth in Guinea Pigs"
 author: "Hugo Janssen"
 date: '`r format(Sys.time(), "%d %b, %Y")`'
+header-includes: \usepackage{graphicx}
 output: pdf_document
 ---
 
@@ -27,12 +28,15 @@ The analysis uses the *TootGrowth* dataset in the R datasets package. It contain
 
 
 ##Exploratory analysis
+
+### Dataset summary
 Table 1 summarizes the contents of the dataset. It shows the tooth length, which varies between `r min(ToothGrowth$len)` and `r max(ToothGrowth$len)` with a mean of `r mean(ToothGrowth$len)`, the supplements OJ and VC and the dose levels 0.5, 1, and 2 mg.
 
 ```{r, results = 'asis', echo = FALSE}
 xtable(summary(ToothGrowth), caption = "Summary of the ToothGrowth dataset")
 ```
 
+### Box plots
 The box plots in Appendix I show the increase in tooth length per delivery method, without (left) and with dose level included (right).
 
 The figures suggest that tooth length increases as the dosage is increased, irrespective of the delivery method. Orange juice however, seems to be more effective as it has the highest mean increase in tooth length. Furthermore, the range of tooth growth for orange juice is narrower than for ascorbic acid which suggests a narrower distribution, or less variance.
@@ -50,6 +54,7 @@ true_mean <- 0
 
 To determine statistical significance all hypothesis and confidence intervals will be tested against a `r cl * 100`% confidence level. An $\alpha$ value of `r alpha` is chosen, so that the probability of a Type I error is no greater than `r alpha*100`%.
 
+### Assumptions
 All tests assume that the 10 guinea pigs are randomly drawn from the population, that the population is large enough and that the tooth length of the population is normally distributed and not too skewed. 
 
 
@@ -117,7 +122,8 @@ Tests confirmed what was suggested by the box plots. The first test compared the
 
 Box plots showing the increase in tooth length per delivery method, without (left) and with dose level included (right).
 
-```{r echo = FALSE, fig.show = 'hold'}
+```{r echo = FALSE, out.width = '.45\\linewidth', fig.align = 'center', fig.show = 'hold'}
+
 ggplot(ToothGrowth, aes(factor(supp), len)) + 
     geom_boxplot() +
     geom_point(size = 5, aes(colour = factor(dose)), alpha = 0.6) +
