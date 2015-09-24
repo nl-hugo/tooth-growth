@@ -1,0 +1,138 @@
+---
+title: "The Effect of Vitamin C on Tooth Growth in Guinea Pigs"
+author: "Hugo Janssen"
+date: '`r format(Sys.time(), "%d %b, %Y")`'
+output: pdf_document
+---
+
+```{r global_options, include = FALSE}
+options(digits = 2)
+options(xtable.comment = FALSE)
+knitr::opts_chunk$set(dev = 'pdf')
+```
+
+```{r echo = FALSE}
+library(xtable)
+library(ggplot2)
+data(ToothGrowth)
+```
+
+
+##Abstract
+This project investigates the effect of delivery methods and dose levels of Vitamin C on the tooth growth of a sample guinea pigs. Through hypothesis testing it was found, with 95% confidence, that by using orange juice as delivery method at dose levels of 0.5 and 1 mg the length of teeth increases more than when using ascorbic acid. When vitamins where delivered at a 2 mg dose, no significant difference was found.
+
+
+##Overview
+The analysis uses the *TootGrowth* dataset in the R datasets package. It contains 60 observations on 3 variables on a sample of 10 guinea pigs. The response is the length of teeth in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods orange juice (OJ) or ascorbic acid (VC).
+
+
+##Exploratory analysis
+Table 1 summarizes the contents of the dataset. It shows the tooth length, which varies between `r min(ToothGrowth$len)` and `r max(ToothGrowth$len)` with a mean of `r mean(ToothGrowth$len)`, the supplements OJ and VC and the dose levels 0.5, 1, and 2 mg.
+
+```{r, results = 'asis', echo = FALSE}
+xtable(summary(ToothGrowth), caption = "Summary of the ToothGrowth dataset")
+```
+
+The box plots in Appendix I show the increase in tooth length per delivery method, without (left) and with dose level included (right).
+
+The figures suggest that tooth length increases as the dosage is increased, irrespective of the delivery method. Orange juice however, seems to be more effective as it has the highest mean increase in tooth length. Furthermore, the range of tooth growth for orange juice is narrower than for ascorbic acid which suggests a narrower distribution, or less variance.
+
+From the figure that includes the dose levels, it seems that orange juice is more effective at lower doses compared to ascorbic acid with respective means of about 12 and 7 for a 0.5 mg dose. Also, for orange juice, increasing the dose from 1 mg to 2 mg leads to a far less significant increase in tooth length compared to an increase of the dosage from 0.5 mg to 1 mg. Ascorbic acid shows a more linear pattern when increasing the dose.
+
+
+## Hypothesis testing and confidence intervals
+
+```{r echo = FALSE}
+cl <- 0.95
+alpha <- 0.05
+true_mean <- 0
+```
+
+To determine statistical significance all hypothesis and confidence intervals will be tested against a `r cl * 100`% confidence level. An $\alpha$ value of `r alpha` is chosen, so that the probability of a Type I error is no greater than `r alpha*100`%.
+
+All tests assume that the 10 guinea pigs are randomly drawn from the population, that the population is large enough and that the tooth length of the population is normally distributed and not too skewed. 
+
+
+### Mean comparison
+
+The first test compares the mean of the tooth length based on the delivery method alone. The null hypothesis states that the means are equal and the alternative hypothesis states that the means are not equal:
+$$H_0 : \mu_{OJ} = \mu_{VC}$$
+$$H_a : \mu_{OJ} \neq \mu_{VC}$$
+
+Where $\mu_{OJ}$ is the population mean tooth length for orange juice and $\mu_{VC}$ for ascorbic acid.
+
+
+```{r echo = FALSE}
+oj <- subset(ToothGrowth, supp == 'OJ')$len
+vc <- subset(ToothGrowth, supp == 'VC')$len
+ts <- t.test(oj, vc, paired = TRUE, var.equal = FALSE, data = ToothGrowth, conf.level = cl)
+ts
+```
+
+```{r echo = FALSE}
+p_val <- as.character(ts$p.value <= alpha)
+res <- as.character(ts$conf[1] <= true_mean && true_mean <= ts$conf[2])
+```
+
+Since the p-value `r ts$p.value` for this test is `r switch(p_val, "FALSE"="higher", "TRUE"="lower")` than the chosen alpha, we `r switch(p_val, "FALSE"="fail to ", "TRUE"="")`reject the null hypothesis in favor of the alternative hypothesis. Furthermore, the confidence interval [`r ts$conf.int`] `r switch(res, "FALSE"="does not", "TRUE"="does")` contain the mean value `r true_mean`.
+
+
+
+### Dose comparison
+
+Further tests compare the mean of the tooth length per dose. To this aim, all observations are divided in groups: one for each combination of dosage level and supplement.
+
+
+```{r echo = FALSE}
+oj_05 <- subset(ToothGrowth, supp == 'OJ' & dose == 0.5)$len
+vc_05 <- subset(ToothGrowth, supp == 'VC' & dose == 0.5)$len
+
+oj_10 <- subset(ToothGrowth, supp == 'OJ' & dose == 1.0)$len
+vc_10 <- subset(ToothGrowth, supp == 'VC' & dose == 1.0)$len
+
+oj_20 <- subset(ToothGrowth, supp == 'OJ' & dose == 2.0)$len
+vc_20 <- subset(ToothGrowth, supp == 'VC' & dose == 2.0)$len
+
+t05 <- t.test(oj_05, vc_05, paired = TRUE, var.equal = FALSE)
+t10 <- t.test(oj_10, vc_10, paired = TRUE, var.equal = FALSE)
+t20 <- t.test(oj_20, vc_20, paired = TRUE, var.equal = FALSE)
+
+t05
+t10
+t20
+```
+
+The first two tests both have a p-value that is lower than alpha and have confidence intervals that do not include zero. In cases where the doses are 0.5 or 1.0 mg, we must thus conclude that there is a difference in the mean increase of tooth length. The third test however, shows a p-value of `r t20$p.value` which exceeds alpha and a confidence interval that contains 0. For a dosage of 2 mg we must therefore *not* reject the null hypothesis and conclude that there is no statistical significance in the mean increase of tooth lenght for either supplement.
+
+
+## Conclusion
+
+Tests confirmed what was suggested by the box plots. The first test compared the mean tooth growth based on delivery method alone. The hypothesis that the means of delivery methods are equal was tested against the alternative hypothesis that the means are different. A t-test showed that there is statistical significance for the alternative hypothesis to be true. For dose level tests, results indicated that there is a difference in the mean increase in favor of orange juice for dose levels of 1 mg and below. No significant difference was found for a dose level of 2 mg between the two supplements.
+
+
+
+## Appendices
+
+### Appendix I - Box plots 
+
+Box plots showing the increase in tooth length per delivery method, without (left) and with dose level included (right).
+
+```{r echo = FALSE, fig.show = 'hold'}
+ggplot(ToothGrowth, aes(factor(supp), len)) + 
+    geom_boxplot() +
+    geom_point(size = 5, aes(colour = factor(dose)), alpha = 0.6) +
+    ggtitle("Tooth growth per delivery method") +
+    xlab("Delivery method") + 
+    ylab("Tooth length") +
+    theme_minimal(base_family = "", base_size = 14) 
+
+ggplot(ToothGrowth, aes(factor(dose), len)) + 
+    geom_boxplot() +
+    facet_grid(supp ~ ., scales = "fixed") + 
+    geom_point(size = 5, aes(colour = factor(dose)), alpha = 0.6) +
+    ggtitle("Tooth growth per delivery method and dose") +
+    xlab("Dose") + 
+    ylab("Tooth length") +
+    theme_minimal(base_family = "", base_size = 14) 
+```
+
